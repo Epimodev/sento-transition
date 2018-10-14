@@ -1,0 +1,36 @@
+body {
+  background-color: #2c3e50;
+  font-family: sans-serif;
+}
+
+.button {
+  margin-bottom: 50px;
+}
+
+.bubble {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #2ecc71;
+}
+
+.text {
+  color: white;
+  display: inline-block;
+}
+
+
+.animationEnter {
+  transform: scale(0);
+}
+.animationEnterActive {
+  transform: scale(1);
+  transition: 500ms;
+}
+.animationExit {
+  transform: scale(1);
+}
+.animationExitActive {
+  transform: scale(0);
+  transition: 500ms;
+}
