@@ -87,7 +87,7 @@ class CssTransition extends Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    const { classNames, delay, timeout } = this.props;
+    const { children, classNames, delay, timeout } = this.props;
     if (isBecomeDisplay(prevProps, this.props)) {
       const delayDuration = getDuration(delay, 'enter');
       const timeoutDuration = getDuration(timeout, 'enter');
@@ -118,6 +118,7 @@ class CssTransition extends Component<Props, State> {
           }, delayDuration);
         }
       });
+      return;
     }
 
     if (isBecomeHide(prevProps, this.props)) {
@@ -148,6 +149,11 @@ class CssTransition extends Component<Props, State> {
           }, timeoutDuration);
         }, delayDuration);
       }
+      return;
+    }
+
+    if (isChildrenDisplayed(this.props) && this.state.children !== children) {
+      this.setState({ children });
     }
   }
 

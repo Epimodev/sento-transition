@@ -8,10 +8,13 @@ body {
 }
 
 .bubble {
-  width: 50px;
+  display: inline-block;
   height: 50px;
-  border-radius: 50%;
+  line-height: 50px;
+  padding: 0 20px;
+  border-radius: 10px;
   background-color: #2ecc71;
+  color: white;
 }
 
 .text {
