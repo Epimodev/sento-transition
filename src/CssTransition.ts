@@ -1,4 +1,4 @@
-import { Component, ReactNode } from 'react';
+import { Component, cloneElement, ReactElement } from 'react';
 import { findDOMNode } from 'react-dom';
 
 type Duration = { enter: number; exit: number };
@@ -12,13 +12,14 @@ interface Props {
     exitActive: string;
   };
   timeout: Duration | number;
-  children?: ReactNode;
+  children?: ReactElement<any> | null | false;
   delay: Duration | number;
   animateOnMount: boolean;
 }
 
 interface State {
-  children?: ReactNode;
+  children?: ReactElement<any> | null | false;
+  mounted: boolean;
 }
 
 function isBecomeDisplay(prevProps: Props, props: Props): boolean {
@@ -52,7 +53,7 @@ class CssTransition extends Component<Props, State> {
   enterTimeout: number | null = null;
   exitTimeout: number | null = null;
 
-  static defaultProps: Partial<Props> = {
+  static defaultProps = {
     animateOnMount: false,
     delay: 0,
   };
@@ -61,7 +62,7 @@ class CssTransition extends Component<Props, State> {
     super(props);
 
     const children = isChildrenDisplayed(props) ? props.children : null;
-    this.state = { children };
+    this.state = { children, mounted: false };
   }
 
   componentDidMount() {
@@ -79,6 +80,7 @@ class CssTransition extends Component<Props, State> {
 
           this.enterTimeout = window.setTimeout(() => {
             domNode.classList.remove(classNames.enter, classNames.enterActive);
+            this.setState({ mounted: true });
             this.enterTimeout = null;
           }, timeoutDuration);
         }, delayDuration);
@@ -158,7 +160,16 @@ class CssTransition extends Component<Props, State> {
   }
 
   render() {
-    const { children } = this.state;
+    const { animateOnMount, classNames } = this.props;
+    const { children, mounted } = this.state;
+
+    if (animateOnMount && !mounted && children && children.props) {
+      const childrenClassName = children.props.className
+        ? `${children.props.className} ${classNames.enter}`
+        : classNames.enter;
+
+      return cloneElement(children, { className: childrenClassName });
+    }
 
     return children;
   }
