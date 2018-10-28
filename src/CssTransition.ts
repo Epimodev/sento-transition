@@ -32,7 +32,8 @@ function isBecomeDisplay(prevProps: Props, props: Props): boolean {
 function isBecomeHide(prevProps: Props, props: Props): boolean {
   return (
     (!!prevProps.children && !props.children) ||
-    (prevProps.displayed === true && props.displayed === false)
+    ((prevProps.displayed === undefined || prevProps.displayed === true) &&
+      props.displayed === false)
   );
 }
 
