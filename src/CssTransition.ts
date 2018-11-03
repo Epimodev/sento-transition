@@ -1,5 +1,7 @@
 import { Component, cloneElement, ReactElement } from 'react';
-import { findDOMNode } from 'react-dom';
+import * as classnames from 'classnames';
+
+const TICK_TIMEOUT = 50;
 
 type Duration = { enter: number; exit: number };
 
@@ -19,7 +21,7 @@ interface Props {
 
 interface State {
   children?: ReactElement<any> | null | false;
-  mounted: boolean;
+  className?: string;
 }
 
 function isBecomeDisplay(prevProps: Props, props: Props): boolean {
@@ -48,6 +50,13 @@ function isChildrenDisplayed({ children, displayed }: Props): boolean {
   return !!children && displayed !== false;
 }
 
+function getChildrenClassName(children: any): string | undefined {
+  if (children && children.props) {
+    return children.props.className;
+  }
+  return undefined;
+}
+
 class CssTransition extends Component<Props, State> {
   enterDelay: number | null = null;
   exitDelay: number | null = null;
@@ -61,77 +70,82 @@ class CssTransition extends Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
+    const { classNames, animateOnMount } = props;
 
     const children = isChildrenDisplayed(props) ? props.children : null;
-    this.state = { children, mounted: false };
+    const childrenClassName = children && children.props ? children.props.className : undefined;
+    const className = classnames(childrenClassName, {
+      [classNames.enter]: animateOnMount,
+    });
+
+    this.state = { children, className };
   }
 
   componentDidMount() {
-    const { animateOnMount, delay, timeout, classNames } = this.props;
+    const { children, animateOnMount, delay, timeout, classNames } = this.props;
+
     if (animateOnMount) {
+      const childrenClassName = getChildrenClassName(children);
       const delayDuration = getDuration(delay, 'enter');
       const timeoutDuration = getDuration(timeout, 'enter');
 
-      const domNode = findDOMNode(this);
-      if (domNode instanceof Element) {
-        domNode.classList.add(classNames.enter);
-        this.enterDelay = window.setTimeout(() => {
-          domNode.classList.add(classNames.enterActive);
-          this.enterDelay = null;
+      this.enterDelay = window.setTimeout(() => {
+        const enterActiveClassName = classnames(
+          childrenClassName,
+          classNames.enter,
+          classNames.enterActive,
+        );
+        this.setState({ className: enterActiveClassName });
+        this.enterDelay = null;
 
-          this.enterTimeout = window.setTimeout(() => {
-            domNode.classList.remove(classNames.enter, classNames.enterActive);
-            this.setState({ mounted: true });
-            this.enterTimeout = null;
-          }, timeoutDuration);
-        }, delayDuration);
-      }
+        this.enterTimeout = window.setTimeout(() => {
+          this.setState({ className: childrenClassName });
+          this.enterTimeout = null;
+        }, timeoutDuration);
+      }, delayDuration + TICK_TIMEOUT);
     }
   }
 
   componentDidUpdate(prevProps: Props) {
     const { children, classNames, delay, timeout } = this.props;
+
     if (isBecomeDisplay(prevProps, this.props)) {
+      const childrenClassName = getChildrenClassName(children);
       const delayDuration = getDuration(delay, 'enter');
       const timeoutDuration = getDuration(timeout, 'enter');
+      const enterClassName = classnames(childrenClassName, classNames.enter);
 
-      this.setState({ children: this.props.children }, () => {
-        const domNode = findDOMNode(this);
-        if (domNode instanceof Element) {
-          domNode.classList.add(classNames.enter);
-
-          if (this.exitDelay) {
-            window.clearTimeout(this.exitDelay);
-            this.exitDelay = null;
-          }
-          if (this.exitTimeout) {
-            window.clearTimeout(this.exitTimeout);
-            this.exitTimeout = null;
-            domNode.classList.remove(classNames.exit, classNames.exitActive);
-          }
-
-          this.enterDelay = window.setTimeout(() => {
-            domNode.classList.add(classNames.enterActive);
-            this.enterDelay = null;
-
-            this.enterTimeout = window.setTimeout(() => {
-              domNode.classList.remove(classNames.enter, classNames.enterActive);
-              this.enterTimeout = null;
-            }, timeoutDuration);
-          }, delayDuration);
+      this.setState({ children: this.props.children, className: enterClassName }, () => {
+        if (this.exitDelay) {
+          window.clearTimeout(this.exitDelay);
+          this.exitDelay = null;
         }
+        if (this.exitTimeout) {
+          window.clearTimeout(this.exitTimeout);
+          this.exitTimeout = null;
+        }
+
+        this.enterDelay = window.setTimeout(() => {
+          const enterActiveClassName = classnames(enterClassName, classNames.enterActive);
+          this.setState({ className: enterActiveClassName });
+          this.enterDelay = null;
+
+          this.enterTimeout = window.setTimeout(() => {
+            this.setState({ className: childrenClassName });
+            this.enterTimeout = null;
+          }, timeoutDuration);
+        }, delayDuration);
       });
       return;
     }
 
     if (isBecomeHide(prevProps, this.props)) {
+      const childrenClassName = getChildrenClassName(this.state.children);
       const delayDuration = getDuration(delay, 'exit');
       const timeoutDuration = getDuration(timeout, 'exit');
+      const exitClassName = classnames(childrenClassName, classNames.exit);
 
-      const domNode = findDOMNode(this);
-      if (domNode instanceof Element) {
-        domNode.classList.add(classNames.exit);
-
+      this.setState({ className: exitClassName }, () => {
         if (this.enterDelay) {
           window.clearTimeout(this.enterDelay);
           this.enterDelay = null;
@@ -139,37 +153,58 @@ class CssTransition extends Component<Props, State> {
         if (this.enterTimeout) {
           window.clearTimeout(this.enterTimeout);
           this.enterTimeout = null;
-          domNode.classList.remove(classNames.enter, classNames.enterActive);
         }
 
         this.exitDelay = window.setTimeout(() => {
-          domNode.classList.add(classNames.exitActive);
+          const exitActiveClassName = classnames(exitClassName, classNames.exitActive);
+          this.setState({ className: exitActiveClassName });
           this.exitDelay = null;
 
           this.exitTimeout = window.setTimeout(() => {
-            this.setState({ children: null });
+            this.setState({ children: null, className: childrenClassName });
             this.exitTimeout = null;
           }, timeoutDuration);
         }, delayDuration);
-      }
+      });
       return;
     }
 
     if (isChildrenDisplayed(this.props) && this.state.children !== children) {
-      this.setState({ children });
+      this.setState(state => {
+        const propClassName = getChildrenClassName(children);
+        const stateClassName = getChildrenClassName(state.children);
+        if (propClassName !== stateClassName) {
+          return { children, className: propClassName };
+        }
+        return { children };
+      });
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.enterDelay) {
+      window.clearTimeout(this.enterDelay);
+      this.enterDelay = null;
+    }
+    if (this.enterTimeout) {
+      window.clearTimeout(this.enterTimeout);
+      this.enterTimeout = null;
+    }
+    if (this.exitDelay) {
+      window.clearTimeout(this.exitDelay);
+      this.exitDelay = null;
+    }
+    if (this.exitTimeout) {
+      window.clearTimeout(this.exitTimeout);
+      this.exitTimeout = null;
     }
   }
 
   render() {
-    const { animateOnMount, classNames } = this.props;
-    const { children, mounted } = this.state;
+    const { children, className } = this.state;
 
-    if (animateOnMount && !mounted && children && children.props) {
-      const childrenClassName = children.props.className
-        ? `${children.props.className} ${classNames.enter}`
-        : classNames.enter;
-
-      return cloneElement(children, { className: childrenClassName });
+    if (children && children.props) {
+      return cloneElement(children, { className });
     }
 
     return children;
