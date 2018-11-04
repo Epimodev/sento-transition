@@ -1,6 +1,8 @@
 import { Component, cloneElement, ReactElement } from 'react';
 import { Props as CssTransitionProps } from './CssTransition';
 
+const TICK_TIMEOUT = 50;
+
 interface Props {
   children: ReactElement<CssTransitionProps>[];
 }
@@ -39,10 +41,10 @@ function getExitTimeout(child: ReactElement<CssTransitionProps>) {
 
   if (delay) {
     const exitDelay = typeof delay === 'number' ? delay : delay.exit;
-    return exitTimeout + exitDelay + 50;
+    return exitTimeout + exitDelay + TICK_TIMEOUT;
   }
 
-  return exitTimeout + 50;
+  return exitTimeout + TICK_TIMEOUT;
 }
 
 class TransitionGroup extends Component<Props, State> {

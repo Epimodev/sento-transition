@@ -16,9 +16,6 @@ I always use [react-transition-group](https://reactcommunity.org/react-transitio
 So I create this component inspired by `react-transition-group`.
 
 
-## Plan for futur
-- create a CssTransitionGroup component to handle list of components with the same animation
-
 ## Basic examples
 
 #### example
@@ -69,6 +66,26 @@ import { CssTransition } from 'sento-transition';
 </CssTransition>
 ```
 
+#### animation of a list of elements
+
+You can use `TransitionGroup` component to animate a list of components.
+
+```jsx
+import { TransitionGroup, CssTransition } from 'sento-transition';
+
+...
+
+<TransitionGroup>
+  {items.map(item => (
+    <CssTransition key={item.id} classNames={animationClassNames} timeout={500} animateOnMount>
+      <div>{item.message}</div>
+    </CssTransition>
+  ))}
+</TransitionGroup>
+```
+
+> Note : TransitionGroup use children keys to trigger enter and exit animation.
+
 ## Documentation
 
 ### CssTransition
@@ -93,3 +110,9 @@ start enter animation when `<CssTransition>` component is mounted.
 **children** `ReactNode`  
 *warning* Component should contain only 1 children and must be an HTMLElement (or a react element which return 1 HTMLElement).
 If children is a text node, it'll be not animated.
+
+### TransitionGroup
+
+**children** `ReactElement[]`  
+This is the only prop available for TransitionGroup.
+children must be a list of `CssTransition` elements.
