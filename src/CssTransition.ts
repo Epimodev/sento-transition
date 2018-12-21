@@ -101,7 +101,7 @@ class CssTransition extends Component<Props, State> {
         this.enterTimeout = window.setTimeout(() => {
           this.setState({ className: childrenClassName });
           this.enterTimeout = null;
-        }, timeoutDuration);
+        }, timeoutDuration + TICK_TIMEOUT);
       }, delayDuration + TICK_TIMEOUT);
     }
   }
@@ -133,8 +133,8 @@ class CssTransition extends Component<Props, State> {
           this.enterTimeout = window.setTimeout(() => {
             this.setState({ className: childrenClassName });
             this.enterTimeout = null;
-          }, timeoutDuration);
-        }, delayDuration);
+          }, timeoutDuration + TICK_TIMEOUT);
+        }, delayDuration + TICK_TIMEOUT);
       });
       return;
     }
@@ -163,8 +163,8 @@ class CssTransition extends Component<Props, State> {
           this.exitTimeout = window.setTimeout(() => {
             this.setState({ children: null, className: childrenClassName });
             this.exitTimeout = null;
-          }, timeoutDuration);
-        }, delayDuration);
+          }, timeoutDuration + TICK_TIMEOUT);
+        }, delayDuration + TICK_TIMEOUT);
       });
       return;
     }
