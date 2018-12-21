@@ -1,6 +1,6 @@
 {
   "name": "sento-transition",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A react component for css animation",
   "author": "Frederic Godin",
   "repository": "Epimodev/sento-transition",
